@@ -1,0 +1,44 @@
+﻿@model List<Tests.Models.TestModel>
+
+<h2>Создание Билета</h2>
+
+<form method="post" asp-action="Create">
+    <input type="hidden" name="subjectid" value="@ViewBag.SubjectViewModelid" />
+    <div class="form-group">
+        <label>Название</label>
+        <input type="text" name="Title" class="form-control" required />
+    </div>
+    <button type="submit" class="btn btn-primary">Создать</button>
+</form>
+
+<hr />
+
+
+<h2>Текущие билеты</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Билеты</th>
+            <th>Количество билетов</th>
+            <th class="actions">Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var test in Model)
+        {
+            <tr>
+                <td>@test.Title</td>
+                <td>@test.Questions.Count</td>
+                <td class="actions">
+                    <a href="@Url.Action("CreateQuestion", "TestCreate", new { testId = test.Id })" class="btn btn-success btn-custom">Создание вопроса</a>
+                    <a href="@Url.Action("Edit", "TestCreate", new { testId = test.Id })" class="btn btn-primary btn-custom">Измeнение Билета</a>
+                    <form method="post" action="@Url.Action("Delete", "TestCreate")">
+                        <input type="hidden" name="testId" value="@test.Id" />
+                        <button type="submit" class="btn btn-danger btn-custom">Удаление</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

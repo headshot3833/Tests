@@ -1,0 +1,13 @@
+﻿@using Tests.Models
+@model List<SubjectViewModel>
+
+<h1>Список предметов</h1>
+
+<div class="subjects-container">
+    @foreach (var subject in Model)
+    {
+        <div class="subject-block">
+            <a asp-controller="Testing" asp-action="Tests" asp-route-subjectId="@subject.id">@subject.TitleSubject</a>
+        </div>
+    }
+</div>

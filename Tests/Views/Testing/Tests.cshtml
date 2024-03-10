@@ -1,0 +1,11 @@
+﻿@using Tests.Models
+@model SubjectViewModel
+
+<h1>Список билетов для предмета @Model.TitleSubject</h1>
+
+<ul>
+    @foreach (var test in Model.Tests)
+    {
+            <li><a asp-controller="Testing" asp-action="StartTest" asp-route-testId="@test.Id">@test.Title</a></li>
+    }
+</ul>

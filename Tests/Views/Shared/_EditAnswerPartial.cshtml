@@ -1,0 +1,11 @@
+﻿@model Tests.Models.EditAnswerModel
+
+<input type="hidden" asp-for="AnswerId" />
+<div class="form-group">
+    <label for="AnswerText">Answer Text:</label>
+    <input type="text" asp-for="AnswerText" class="form-control" />
+</div>
+<div class="form-group">
+    <label for="IsCorrect">Is Correct:</label>
+    <input type="checkbox" asp-for="IsCorrect" class="form-control" />
+</div>

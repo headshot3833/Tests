@@ -1,0 +1,44 @@
+﻿@model Tests.Models.TestModel
+
+<h2>Изменение теста: @ViewBag.Title</h2>
+
+@if (Model.Questions.Count > 0)
+{
+    <h3>Вопросы</h3>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Вопрос</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var question in Model.Questions)
+            {
+                <tr>
+                    <td>@question.QuestionText</td>
+                    <td>
+                        <a href="@Url.Action("EditQuestionAnswers", "TestCreate", new { testId = Model.Id, questionId = question.Id })" class="btn btn-primary">Изменения ответа</a>
+                        <form method="post" action="@Url.Action("DeleteQuestion", "TestCreate")">
+                            <input type="hidden" name="testId" value="@Model.Id" />
+                            <input type="hidden" name="questionId" value="@question.Id" />
+                            <button type="submit" class="btn btn-danger">Удалить</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>Вопросы не найдены</p>
+}
+
+<div>
+    <h3>Создать Вопрос</h3>
+    <form method="get" asp-action="CreateQuestion" asp-route-testId="@Model.Id">
+        <button type="submit" class="btn btn-primary">Create Question</button>
+    </form>
+</div>

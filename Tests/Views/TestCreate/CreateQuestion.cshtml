@@ -1,0 +1,170 @@
+﻿@model Tests.Models.CreateQuestionModel
+
+<h2>Создание Вопроса и ответов</h2>
+
+<form id="createQuestionForm" method="post" asp-action="CreateQuestion" asp-controller="TestCreate">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="TestId" />
+
+    <div class="form-group">
+        <label>Вопрос:</label>
+        <input type="text" asp-for="QuestionText" class="form-control" required />
+        <span asp-validation-for="QuestionText" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label>Тип вопроса:</label>
+        <select id="questionTypeSelect" asp-for="QuestionType" class="form-control">
+            <option value="Single">Один Ответ</option>
+            <option value="Multiple">Несколько ответов</option>
+        </select>
+    </div>
+
+    <div id="answersContainer">
+        <!-- Load answer fields here using AJAX -->
+    </div>
+    <button type="button" class="btn btn-primary" id="addAnswerButton">Добавить ответы</button>
+    <a href="@Url.Action("Edit", "TestCreate", new { TestId = Model.TestId })" class="btn btn-primary btn-custom">Перейти к изменению теста </a>
+    <button type="submit" class="btn bt-primary">Создать</button>
+    <button type="button" class="btn btn-primary" id="deleteLastAnswerButton">Удалить последний ответ</button>
+
+</form>
+<span id="curentQuestionCount">Текущее количество вопросов: @Model.TestCount </span>
+@section Scripts {
+    <script>
+            $(document).ready(function () {
+                var answerId = 0;
+
+
+            function updateAnswerIdsAndNames() {
+                var answerContainers = $("#answersContainer").find(".answer-container");
+                answerContainers.each(function (index, element) {
+                    var $element = $(element);
+                    var newIndex = index;
+
+                    $element.find("input[name^='AnswerId']").val(newIndex);
+                    $element.find("input[name^='Answers[']").attr("name", `Answers[${newIndex}].AnswerText`);
+                    $element.find("input[name^='SelectedAnswerId']").attr("value", newIndex); // Update value attribute
+                    $element.find("input[name^='IsCorrectIndexes']").attr("name", `Answers[${newIndex}].IsCorrectIndexes`);
+                });
+            }
+                function deleteLastAnswer() {
+                    var $answersContainer = $("#answersContainer");
+                    var $lastFormGroup = $answersContainer.find(".answer-container").last();
+                    $lastFormGroup.remove();
+                    answerId--;
+                    updateAnswerIdsAndNames();
+                }
+
+                $("#deleteLastAnswerButton").click(function () {
+                    deleteLastAnswer();
+                });
+
+        $("#addAnswerButton").click(function () {
+            loadAnswers(answerId);
+            answerId++;
+        });
+
+        function loadAnswers(answerId) {
+            var localAnswerId = answerId;
+            var formData = new FormData();
+            $.ajax({
+                url: "/shared/_CreateAnswerPartial",
+                type: "GET",
+                success: function (result) {
+                    var answersContainer = $(result);
+                    answersContainer.find("input[name^='AnswerId']").attr("data-answer-id", localAnswerId);
+                    answersContainer.find("input[name^='Answers[0]']").attr("name", `Answers[${localAnswerId}].AnswerText`);
+
+                    // Set value attribute for radio inputs
+                    answersContainer.find("input[type='radio'][name='SelectedAnswerId']").attr("value", localAnswerId);
+
+
+                    // Create a new container for each answer and radio/checkbox input
+                    var answerContainer = $('<div class="form-group answer-container"></div>');
+
+                    // Get the selected question type
+                    var questionType = $("#questionTypeSelect").val();
+                    var $answerInputs = answersContainer.find("input[name^='SelectedAnswerId']");
+                    var $correctAnswerInput = answersContainer.find("input[name^='CorrectAnswerIds']");
+
+                    if (questionType === "Multiple") {
+                        $answerInputs.attr("type", "checkbox");
+                        $correctAnswerInput.attr("type", "hidden").val("false"); // Set default value for checkboxes
+                            // ...
+                        } else {
+                            $answerInputs.attr("type", "radio");
+                            $correctAnswerInput.attr("type", "hidden").val("false"); // Set default value for radio buttons
+
+                            $answerInputs.on("change", function () {
+                                $correctAnswerInput.val("false"); // Reset all hidden fields to false
+                                $(this).closest(".answer-container").find("input[name^='CorrectAnswerIds']").val("true");// Set current one to true
+                            });
+                        }
+
+                        // Update the FormData here with IsCorrect value
+                        if ($correctAnswerInput.val() === "true") {
+                            formData.set(`Answers[${localAnswerId}].IsCorrect`, "true");
+                        }
+
+                        answerContainer.append(answersContainer);
+                        $("#answersContainer").append(answerContainer);
+                        updateAnswerIdsAndNames();
+                    },
+                    error: function () {
+                        alert("Error loading answers");
+                    }
+                });
+            }
+
+            $("#questionTypeSelect").change(function () {
+                answerId = 0; // Reset the answerId counter
+                $("#answersContainer").empty(); // Empty the answers container
+                loadAnswers(answerId); // Load answers with reset counter
+                answerId++; // Increment answerId for the next answer
+            });
+
+            $("#createQuestionForm").submit(function (e) {
+                e.preventDefault();
+                var $answerInputs = $("#answersContainer").find("input[name^='SelectedAnswerId']");
+                var selectedAnswersCount = $answerInputs.filter(":checked").length;
+
+                if (selectedAnswersCount === 0) {
+                    alert("Добавьте хотя бы один ответ перед созданием вопроса.");
+                    return;
+                }
+                var formData = new FormData(this);
+
+                // Update FormData based on checkbox states
+                var $answerInputs = $("#answersContainer").find("input[name^='SelectedAnswerId']");
+                $answerInputs.each(function () {
+                    var localAnswerId = $(this).attr("value");
+                    formData.delete(`Answers[${localAnswerId}].IsCorrect`); // Remove previous value
+                    if ($(this).is(":checked")) {
+                        formData.append(`Answers[${localAnswerId}].IsCorrect`, "true");
+                    }
+                });
+
+                console.log("Form Data:", formData); // Use FormData to handle checkbox values
+
+                $.ajax({
+                    url: '@Url.Action("CreateQuestion", "TestCreate")',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        var curentQuestionCount = parseInt($("#curentQuestionCount").text().split(':')[1].trim());
+                        curentQuestionCount++;
+                        $("#curentQuestionCount").text("Текущее количество вопросов:" + curentQuestionCount);
+                        alert("Вопрос успешно создался!");
+                    },
+                    error: function (error) {
+                        console.error("Error", error);
+                        alert("Ошибка создания. Обратитесь к программисту.");
+                    }
+                });
+            });
+        });
+    </script>
+}

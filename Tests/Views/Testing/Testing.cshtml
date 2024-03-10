@@ -1,0 +1,104 @@
+﻿@using Tests.Models
+@model StartTestViewModel
+
+
+<h2>@Model.TestTitle</h2>
+
+<form asp-controller="Testing" asp-action="Submit" method="post">
+    <input type="hidden" name="testId" value="@Model.TestId">
+    <input type="hidden" name="fullName" value="@ViewBag.fullName" />
+    <input type="hidden" name="uniqueTestId" value="@ViewBag.uniqueTestId" />
+    <div class="question-container">
+        @for (var i = 0; i < Model.Questions.Count; i++)
+        {
+            var question = Model.Questions[i];
+            var answers = question.Answers;
+
+            <div class="question" id="question-@i" @if (i != 0) {
+                <text>style="display: none;"</text>
+            }>
+                    <h4>@question.QuestionText</h4>
+
+                    <div class="answer-container">
+                    @for (var j = 0; j < answers.Count; j++)
+                    {
+                        var answer = answers[j];
+
+                                <label>
+                            @if (question.QuestionType == AnswerType.Single)
+                            {
+                                            <input type="radio" name="selectedAnswers[@i]" value="@j">
+                            }
+                            else if (question.QuestionType == AnswerType.Multiple)
+                            {
+                                            <input type="checkbox" name="selectedAnswers[@i]" value="@j">
+                            }
+                            else if (question.QuestionType == AnswerType.Text)
+                            {
+                                            <input type="text" name="textAnswers[@i]">
+                            }
+                            @answer.AnswerText
+                                </label>
+                                <br>
+                    }
+                    </div>
+
+                @if (i > 0)
+                {
+                            <button type="button" class="prev-button" data-prev="@((i - 1) % Model.Questions.Count)">Назад</button>
+                }
+                @if (i < Model.Questions.Count - 1)
+                {
+                            <button type="button" class="next-button" data-next="@((i + 1) % Model.Questions.Count)">следующий</button>
+                }
+                else
+                {
+                            <button type="submit" class="submit-button">Сдать билет</button>
+                }
+                </div>
+        }
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        const questions = document.querySelectorAll('.question');
+        const nextButtons = document.querySelectorAll('.next-button');
+        const prevButtons = document.querySelectorAll('.prev-button');
+        const submitButton = document.querySelector('.submit-button');
+        const questionCount = questions.length;
+        let currentQuestion = 0;
+
+        function updateButtonVisibility() {
+            prevButtons.forEach(button => {
+                button.style.display = currentQuestion === 0 ? 'none' : 'inline';
+            });
+
+            nextButtons.forEach(button => {
+                button.style.display = currentQuestion === questionCount - 1 ? 'none' : 'inline';
+            });
+
+            submitButton.style.display = currentQuestion === questionCount - 1 ? 'inline' : 'none';
+        }
+
+        nextButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                questions[currentQuestion].style.display = 'none';
+                currentQuestion = parseInt(button.getAttribute('data-next'));
+                questions[currentQuestion].style.display = 'block';
+                updateButtonVisibility();
+            });
+        });
+
+        prevButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                questions[currentQuestion].style.display = 'none';
+                currentQuestion = parseInt(button.getAttribute('data-prev'));
+                questions[currentQuestion].style.display = 'block';
+                updateButtonVisibility();
+            });
+        });
+
+        updateButtonVisibility();
+    </script>
+}

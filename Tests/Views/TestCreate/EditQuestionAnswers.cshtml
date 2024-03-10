@@ -1,0 +1,105 @@
+﻿@using Tests.Models
+@model Tests.Models.EditQuestionModel
+
+<h2>Edit Question and Answers</h2>
+
+@using (Html.BeginForm("UpdateQuestionAnswers", "TestCreate", FormMethod.Post, new { id = "updateQuestionForm" }))
+{
+    @Html.HiddenFor(m => m.TestId)
+    @Html.HiddenFor(m => m.QuestionId)
+
+    <div class="form-group">
+        <label for="QuestionText">Question Text:</label>
+        @Html.TextBoxFor(m => m.QuestionText, new { @class = "form-control" })
+    </div>
+
+    <div class="form-group">
+        <label for="QuestionType">Тип вопроса</label>
+        <select class="form-control" asp-for="QuestionType" asp-items="Html.GetEnumSelectList<AnswerType>()"></select>
+    </div>
+
+    <h3>Answers:</h3>
+    <div id="answersContainer">
+        @for (var aIndex = 0; aIndex < Model.Answers.Count; aIndex++)
+        {
+            var answer = Model.Answers[aIndex];
+
+            <div class="answer-container" data-answer-id="@answer.AnswerId">
+                <h5>Answer</h5>
+                @Html.HiddenFor(m => m.Answers[aIndex].AnswerId)
+                <div class="form-group">
+                    @Html.TextBoxFor(m => m.Answers[aIndex].AnswerText, new { @class = "form-control" })
+                </div>
+                <div class="form-group">
+                    <label for="IsCorrect">Is Correct:</label>
+                    <input type="checkbox" name="Answers[@aIndex].IsCorrect" value="true" @(answer.IsCorrect ? "checked" : "") />
+                    <input type="hidden" name="Answers[@aIndex].IsCorrect" value="false" />
+                </div>
+
+                <button type="button" class="btn btn-danger" onclick="deleteAnswer(@answer.AnswerId)">Удалить</button>
+            </div>
+        }
+    </div>
+
+    <div id="newAnswerContainer"></div>
+
+    <button type="button" class="btn btn-success" onclick="addAnswer()">Добавить ответ</button>
+    <button type="submit" class="btn btn-primary">Обновить</button>
+}
+
+<a href="@Url.Action("Edit", "TestCreate", new { testId = Model.TestId })" class="btn btn-secondary">Вернуться к вопросам</a>
+
+@section Scripts {
+    <script>
+        function deleteAnswer(answerId) {
+            if (answerId < 0) {
+                var answerContainers = document.querySelectorAll('.answer-container');
+                var lastAnswerContainer = answerContainers[answerContainers.length - 1];
+
+                if (lastAnswerContainer && lastAnswerContainer.getAttribute('data-answer-id') == answerId) {
+                    lastAnswerContainer.remove();
+                }
+            } else {
+                $.ajax({
+                    url: '@Url.Action("DeleteAnswer", "TestCreate")',
+                    type: 'POST',
+                    data: { answerId: answerId },
+                    success: function (response) {
+                        console.log("Response", response);
+                        if (response.success) {
+                            var answerContainer = document.querySelector('.answer-container[data-answer-id="' + answerId + '"]');
+                            if (answerContainer) {
+                                answerContainer.remove();
+                            }
+                        } else {
+                            alert("Error deleting the answer. Contact the programmer.");
+                        }
+                    },
+                    error: function (error) {
+                        console.error("Error", error);
+                        alert("Error deleting the answer. Contact the programmer.");
+                    }
+                });
+            }
+        }
+
+        function addAnswer() {
+            var newAnswerIndex = $(".answer-container").length;
+
+            var newAnswerHtml =
+                '<div class="answer-container" data-answer-id="' + -newAnswerIndex + '">' +
+                '<input type="hidden" name="Answers[' + newAnswerIndex + '].AnswerId" value="' + -newAnswerIndex + '" />' +
+                '<div class="form-group">' +
+                '<input type="text" name="Answers[' + newAnswerIndex + '].AnswerText" class="form-control" />' +
+                '</div>' +
+                '<div class="form-group">' +
+                '<label for="IsCorrect">правильный ответ</label>' +
+                '<input type="checkbox" name="Answers[' + newAnswerIndex + '].IsCorrect" />' +
+                '</div>' +
+                '<button type="button" class="btn btn-danger" onclick="deleteAnswer(' + -newAnswerIndex + ')">Remove Answer</button>' +
+                '</div>';
+
+            $("#newAnswerContainer").append(newAnswerHtml);
+        }
+    </script>
+}

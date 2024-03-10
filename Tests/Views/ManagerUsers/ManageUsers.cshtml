@@ -1,0 +1,23 @@
+﻿@model List<Tests.Models.User>
+
+<h2>Manage Users</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.Login</td>
+                <td>
+                    <a href="@Url.Action("DeleteUser", "Auth")">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

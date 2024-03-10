@@ -1,0 +1,25 @@
+﻿@using Tests.Models
+@model CreateAnswerModel
+
+<div class="form-group">
+    <label>Ответ</label>
+    <input type="text" name="Answers[@Model.AnswerId].AnswerText" class="form-control" required />
+    <span asp-validation-for="AnswerText" class="text-danger"></span>
+    @if (Model.GetQuestionType() != AnswerType.Text)
+    {
+        if (Model.GetQuestionType() == AnswerType.Single)
+        {
+            <input type="radio" name="SelectedAnswerId" value="@Model.AnswerId" @(Model.IsCorrect == true ? "checked" : "") />
+
+            <input type="hidden" name="Answers[@Model.AnswerId].IsCorrect" value="@(Model.IsCorrect == true ? "true" : "false")" />
+            <label>Правильный ответ</label>
+        }
+        else if (Model.GetQuestionType() == AnswerType.Multiple)
+        {
+            <input type="checkbox" name="Answers[@Model.AnswerId].IsCorrect" value="true" @(Model.IsCorrect == true ? "checked" : "") />
+            <input type="hidden" name="Answers[@Model.AnswerId].IsCorrect" value="false" />
+            <label>Правильный ответ</label>
+        }
+    }
+</div>
+

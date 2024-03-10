@@ -1,0 +1,12 @@
+﻿@using Tests.Models
+@model StartTestViewModel
+
+<h2>@Model.TestTitle</h2>
+
+<form asp-controller="Testing" asp-action="Testing" method="post">
+    <input type="hidden" id="uniqueTestId" name="uniqueTestId" value="@ViewBag.UniqueTestId">
+    <input type="hidden" name="testId" value="@Model.TestId">
+    <label for="fullName">Введите ФИО:</label>
+    <input type="text" name="fullName" required>
+    <button type="submit">Начать тест</button>
+</form>
